@@ -51,6 +51,16 @@ export function LessonLayout({ lesson, previous, next }: LessonLayoutProps) {
     setOutput(null)
   }, [lesson.slug])
 
+  useEffect(() => {
+    if (!output) return
+
+    const frame = requestAnimationFrame(() => {
+      window.scrollTo({ top: document.documentElement.scrollHeight, behavior: "smooth" })
+    })
+
+    return () => cancelAnimationFrame(frame)
+  }, [output])
+
   async function runProgram() {
     setRunning(true)
     setOutput(null)
