@@ -29,6 +29,6 @@
     }
   ],
   "rewrites": [
-    { "source": "/lessons/(.*)", "destination": "/index.html" }
+    { "source": "/lessons/(.*)", "destination": "/" }
   ]
 }
