@@ -1,0 +1,80 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --font-serif: "Source Serif 4", "Iowan Old Style", Palatino, serif;
+  --font-note: "Literata", "Iowan Old Style", Palatino, serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "Cascadia Code", monospace;
+
+  --color-page: #1b1a17;
+  --color-paper: #ebe4d6;
+  --color-mute: #9a9286;
+  --color-ink: #c9c1b4;
+  --color-rule: #2c2a26;
+  --color-well: #12110f;
+  --color-well-edge: #2a2824;
+  --color-ember: #d4785b;
+  --color-pine: #7fa98a;
+  --color-dusk: #8aa4c9;
+  --color-ash: #c8bfb2;
+}
+
+html {
+  color-scheme: dark;
+}
+
+body {
+  margin: 0;
+  min-height: 100svh;
+  background: var(--color-page);
+  color: var(--color-ink);
+  font-family: var(--font-note);
+  font-optical-sizing: auto;
+  font-weight: 400;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background: color-mix(in srgb, var(--color-ember) 40%, transparent);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-ember);
+  outline-offset: 3px;
+}
+
+.notes {
+  font-family: var(--font-note);
+  font-optical-sizing: auto;
+  font-weight: 400;
+  font-size: 1.02rem;
+  line-height: 1.82;
+  color: var(--color-ink);
+  letter-spacing: 0.01em;
+}
+
+.notes strong {
+  font-weight: 500;
+  color: var(--color-paper);
+}
+
+.notes p {
+  font-weight: 400;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  svg animate,
+  svg animateTransform {
+    display: none;
+  }
+}
