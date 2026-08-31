@@ -1,6 +1,6 @@
 import { createBrowserRouter } from "react-router"
 
-import { catalog, getLesson, getNextLesson } from "./lessons/catalog"
+import { catalog, getLesson, getNextLesson, getPreviousLesson } from "./lessons/catalog"
 import { HomePage } from "./pages/HomePage"
 import { LessonErrorPage, LessonPage } from "./pages/LessonPage"
 import { RootLayout } from "./pages/RootLayout"
@@ -24,7 +24,7 @@ export const router = createBrowserRouter([
           if (!lesson) {
             throw new Response("Lesson not found", { status: 404 })
           }
-          return { lesson, next: getNextLesson(lesson.slug) }
+          return { lesson, previous: getPreviousLesson(lesson.slug), next: getNextLesson(lesson.slug) }
         },
       },
     ],

@@ -20,3 +20,9 @@ export function getNextLesson(slug: string): Lesson | null {
   }
   return catalog[index + 1] ?? null
 }
+
+export function getPreviousLesson(slug: string): Lesson | null {
+  const index = catalog.findIndex((lesson) => lesson.slug === slug)
+  if (index <= 0) return null
+  return catalog[index - 1] ?? null
+}

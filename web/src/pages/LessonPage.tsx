@@ -5,12 +5,13 @@ import type { Lesson } from "../lessons/types"
 
 type LessonData = {
   lesson: Lesson
+  previous: Lesson | null
   next: Lesson | null
 }
 
 export function LessonPage() {
-  const { lesson, next } = useLoaderData<LessonData>()
-  return <LessonLayout lesson={lesson} next={next} />
+  const { lesson, previous, next } = useLoaderData<LessonData>()
+  return <LessonLayout lesson={lesson} previous={previous} next={next} />
 }
 
 export function LessonErrorPage() {

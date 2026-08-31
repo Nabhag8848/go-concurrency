@@ -1,14 +1,16 @@
-import { Fragment, useState, type CSSProperties } from "react"
+import { Fragment, useEffect, useState, type CSSProperties } from "react"
 
 import type { Lesson } from "../lessons/types"
 import { CopyButton } from "./CopyButton"
 import { GoCode } from "./GoCode"
+import { LessonScrollRail } from "./LessonScrollRail"
 import { NextLessonLink } from "./NextLessonLink"
 import { RunButton } from "./RunButton"
 import { SiteHeader } from "./SiteHeader"
 
 type LessonLayoutProps = {
   lesson: Lesson
+  previous: Lesson | null
   next: Lesson | null
 }
 
@@ -26,7 +28,7 @@ function setupLineCount(source: string): number {
   return firstFunction > 0 ? firstFunction : 0
 }
 
-export function LessonLayout({ lesson, next }: LessonLayoutProps) {
+export function LessonLayout({ lesson, previous, next }: LessonLayoutProps) {
   const program = lesson.segments.map((segment) => segment.code ?? "").join("")
   const hasCode = program.trim().length > 0
   const hasVisual = lesson.segments.some((segment) => segment.visual)
@@ -43,6 +45,11 @@ export function LessonLayout({ lesson, next }: LessonLayoutProps) {
   const [running, setRunning] = useState(false)
   const [output, setOutput] = useState<PlaygroundResponse | null>(null)
   const source = lesson.source ?? program
+
+  useEffect(() => {
+    setRunning(false)
+    setOutput(null)
+  }, [lesson.slug])
 
   async function runProgram() {
     setRunning(true)
@@ -65,7 +72,8 @@ export function LessonLayout({ lesson, next }: LessonLayoutProps) {
   }
 
   return (
-    <article className="mx-auto max-w-[1360px] px-5 py-10 sm:px-8 sm:py-12">
+    <article className="lesson-page mx-auto max-w-[1360px] px-5 py-10 sm:px-8 sm:py-12">
+      <LessonScrollRail />
       <SiteHeader />
       <h1 className="mb-3 font-serif text-[clamp(2rem,1.75rem+1.2vw,2.55rem)] leading-[1.18] font-medium tracking-tight text-paper">
         {lesson.title}
@@ -106,7 +114,7 @@ export function LessonLayout({ lesson, next }: LessonLayoutProps) {
                   className={[
                     isVisual
                       ? "visual-panel relative min-h-[1.5rem] py-2 lg:px-2"
-                      : "relative min-h-[1.5rem] border-x border-well-edge bg-well px-4 py-4 lg:px-7",
+                      : "relative min-h-[1.5rem] self-stretch border-x border-well-edge bg-well px-4 py-4 lg:px-7",
                     !isVisual && isFirstAside ? "rounded-t-xl border-t border-well-edge pt-6" : "",
                     !isVisual && isLastAside ? "rounded-b-xl border-b border-well-edge pb-6" : "",
                   ].join(" ")}
@@ -149,7 +157,7 @@ export function LessonLayout({ lesson, next }: LessonLayoutProps) {
         </div>
       )}
 
-      <NextLessonLink next={next} />
+      <NextLessonLink previous={previous} next={next} />
     </article>
   )
 }

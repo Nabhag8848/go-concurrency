@@ -43,6 +43,91 @@ body {
   text-rendering: optimizeLegibility;
 }
 
+/* The course index relies on its visual scroll cue; keep browser chrome out of it. */
+html:has(.home-page) {
+  scrollbar-width: none;
+}
+
+html:has(.home-page)::-webkit-scrollbar {
+  display: none;
+}
+
+/* Lesson pages use the custom runner rail below instead of browser chrome. */
+html:has(.lesson-page) {
+  scrollbar-width: none;
+}
+
+html:has(.lesson-page)::-webkit-scrollbar {
+  display: none;
+}
+
+.lesson-scroll-rail {
+  position: fixed;
+  top: 1rem;
+  right: 0.85rem;
+  bottom: 1rem;
+  z-index: 20;
+  display: none;
+  width: 2rem;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  cursor: ns-resize;
+}
+
+.lesson-scroll-rail::before {
+  position: absolute;
+  top: 1.75rem;
+  right: 50%;
+  bottom: 2rem;
+  border-left: 2px dotted color-mix(in srgb, var(--color-dusk) 65%, var(--color-rule));
+  content: "";
+}
+
+.lesson-scroll-runner {
+  position: absolute;
+  left: 50%;
+  z-index: 1;
+  font-size: 1.9rem;
+  line-height: 1;
+  transform: translate(-52%, -30%);
+  transition: top 120ms ease-out;
+  filter: drop-shadow(0 2px 4px color-mix(in srgb, #000 72%, transparent));
+}
+
+.lesson-scroll-finish {
+  position: absolute;
+  bottom: -0.35rem;
+  left: 50%;
+  font-size: 1.65rem;
+  line-height: 1;
+  transform: translateX(-50%);
+  filter: drop-shadow(0 2px 4px color-mix(in srgb, #000 72%, transparent));
+}
+
+.lesson-scroll-rail:hover .lesson-scroll-runner {
+  animation: runner-bob 430ms ease-in-out infinite alternate;
+}
+
+@keyframes runner-bob {
+  from { transform: translate(-52%, -30%) rotate(-5deg); }
+  to { transform: translate(-52%, -44%) rotate(5deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lesson-scroll-runner,
+  .lesson-scroll-rail:hover .lesson-scroll-runner {
+    animation: none;
+    transition: none;
+  }
+}
+
+@media (min-width: 768px) {
+  .lesson-scroll-rail {
+    display: block;
+  }
+}
+
 ::selection {
   background: color-mix(in srgb, var(--color-ember) 40%, transparent);
 }
@@ -69,6 +154,114 @@ body {
 
 .notes p {
   font-weight: 350;
+}
+
+.home-intro {
+  border-left: 1px solid color-mix(in srgb, var(--color-ember) 52%, var(--color-rule));
+  padding-left: 1rem;
+}
+
+.home-intro p {
+  margin: 0;
+}
+
+.home-intro p + p {
+  margin-top: 0.75rem;
+}
+
+.home-course-grid {
+  display: grid;
+  gap: 3rem;
+}
+
+@media (min-width: 1024px) {
+  .home-page {
+    display: flex;
+    height: 100svh;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .home-page > header {
+    flex: none;
+  }
+
+  .home-course-grid {
+    min-height: 0;
+    flex: 1;
+    grid-template-columns: minmax(23rem, 0.9fr) minmax(44rem, 1.4fr);
+    align-items: start;
+    gap: clamp(3.5rem, 7vw, 8.5rem);
+  }
+
+  .home-course-intro {
+    align-self: start;
+  }
+
+  .home-course-list {
+    position: relative;
+    display: flex;
+    align-self: stretch;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .home-course-scroll {
+    min-height: 0;
+    flex: 1;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding-right: 0.7rem;
+    scrollbar-width: none;
+  }
+
+  .home-course-scroll::-webkit-scrollbar {
+    display: none;
+  }
+
+  .home-lessons {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 1.75rem;
+  }
+
+  .home-lessons li:nth-last-child(-n + 2) {
+    border-bottom: 1px solid var(--color-rule);
+  }
+
+  .home-lessons .group {
+    min-height: 5.8rem;
+    padding-block: 1rem;
+  }
+
+  .home-scroll-cue {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 1;
+    margin: 0;
+    border: 0;
+    padding: 2.75rem 0 0.6rem;
+    background: linear-gradient(to bottom, transparent, var(--color-page) 44%);
+    color: var(--color-mute);
+    cursor: pointer;
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 0.12em;
+    text-align: center;
+    text-transform: uppercase;
+  }
+
+  .home-scroll-cue:hover {
+    color: var(--color-paper);
+  }
+
+  .home-scroll-cue span {
+    margin-left: 0.35rem;
+    color: var(--color-ember);
+    font-size: 1.1em;
+  }
 }
 
 .lesson-note {
@@ -261,6 +454,53 @@ body {
 
 .playground-output pre.playground-error {
   color: color-mix(in srgb, var(--color-ember) 84%, var(--color-paper));
+}
+
+.lesson-nav-link {
+  display: flex;
+  flex: 1 1 0;
+  flex-direction: column;
+  gap: 0.32rem;
+  min-width: 0;
+  padding: 0.55rem 0.8rem;
+  border-left: 1px solid color-mix(in srgb, var(--color-dusk) 34%, var(--color-rule));
+  background: transparent;
+  color: var(--color-ink);
+  font-family: var(--font-serif);
+  font-size: 1.06rem;
+  line-height: 1.25;
+  transition: border-color 160ms ease, color 160ms ease;
+}
+
+.lesson-nav-link:hover {
+  border-color: var(--color-ember);
+  color: var(--color-paper);
+}
+
+.lesson-nav-label {
+  color: color-mix(in srgb, var(--color-mute) 82%, var(--color-dusk));
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.lesson-nav-next {
+  border-left: 0;
+  border-right: 1px solid color-mix(in srgb, var(--color-ember) 46%, var(--color-rule));
+  text-align: right;
+}
+
+.lesson-nav-next .lesson-nav-label {
+  color: color-mix(in srgb, var(--color-ember) 78%, var(--color-mute));
+}
+
+.lesson-nav-previous:hover {
+  border-color: var(--color-dusk);
+}
+
+.lesson-nav-next:hover {
+  border-color: var(--color-ember);
 }
 
 @keyframes run-button-breathe {

@@ -3,31 +3,30 @@ import { Link } from "react-router"
 import type { Lesson } from "../lessons/types"
 
 type NextLessonLinkProps = {
+  previous: Lesson | null
   next: Lesson | null
 }
 
-export function NextLessonLink({ next }: NextLessonLinkProps) {
-  if (!next) {
-    return (
-      <p className="mt-16 max-w-xl font-serif text-lg text-mute">
-        That is the last lesson.{" "}
-        <Link to="/" className="text-paper underline decoration-ember/60 underline-offset-4 hover:text-ember">
-          Back to the index
-        </Link>
-        .
-      </p>
-    )
-  }
-
+export function NextLessonLink({ previous, next }: NextLessonLinkProps) {
   return (
-    <p className="mt-16 font-serif text-lg">
-      <span className="text-mute">Next example: </span>
-      <Link
-        to={`/lessons/${next.slug}`}
-        className="text-paper underline decoration-ember/70 decoration-1 underline-offset-[6px] transition-colors hover:text-ember"
-      >
-        {next.title}
-      </Link>
-    </p>
+    <nav className="mt-16 flex flex-col gap-3 border-t border-rule pt-6 sm:flex-row sm:items-stretch sm:justify-between" aria-label="Lesson navigation">
+      {previous ? (
+        <Link to={`/lessons/${previous.slug}`} className="lesson-nav-link lesson-nav-previous">
+          <span className="lesson-nav-label">← Previous lesson</span>
+          <span>{previous.title}</span>
+        </Link>
+      ) : <span />}
+      {next ? (
+        <Link to={`/lessons/${next.slug}`} className="lesson-nav-link lesson-nav-next">
+          <span className="lesson-nav-label">Next lesson →</span>
+          <span>{next.title}</span>
+        </Link>
+      ) : (
+        <Link to="/" className="lesson-nav-link lesson-nav-next">
+          <span className="lesson-nav-label">Course complete</span>
+          <span>Back to the index</span>
+        </Link>
+      )}
+    </nav>
   )
 }
