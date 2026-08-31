@@ -23,7 +23,7 @@ export function CopyButton({ text }: CopyButtonProps) {
       onClick={() => {
         void copy()
       }}
-      className="absolute top-3 right-3 z-10 rounded-md border border-well-edge bg-well/90 px-2.5 py-1 font-mono text-[11px] tracking-wide text-mute uppercase transition-colors hover:border-ember/50 hover:text-paper"
+      className="rounded-md border border-well-edge bg-well/90 px-2.5 py-1 font-mono text-[11px] tracking-wide text-mute uppercase transition-colors hover:border-ember/50 hover:text-paper"
     >
       {copied ? "Copied" : "Copy"}
     </button>

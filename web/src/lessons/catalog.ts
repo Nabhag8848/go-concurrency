@@ -3,7 +3,11 @@ import { memoryLessons } from "./memory"
 import { osLessons } from "./os"
 import type { Lesson } from "./types"
 
-export const catalog: Lesson[] = [...osLessons, ...memoryLessons, ...channelLessons]
+// The docs directories are the canonical curriculum order (00 through 16).
+// Keep the site index and next-lesson navigation aligned with that sequence.
+export const catalog: Lesson[] = [...osLessons, ...memoryLessons, ...channelLessons].toSorted(
+  (first, second) => first.order - second.order,
+)
 
 export function getLesson(slug: string | undefined): Lesson | undefined {
   return catalog.find((lesson) => lesson.slug === slug)

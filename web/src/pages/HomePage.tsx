@@ -11,15 +11,11 @@ export function HomePage() {
   const { lessons } = useLoaderData<HomeData>();
 
   return (
-    <main className="mx-auto max-w-[720px] px-6 py-12 sm:px-10 sm:py-16">
+    <main className="mx-auto max-w-[720px] px-5 py-10 sm:px-8 sm:py-12">
       <SiteHeader />
       <h1 className="mb-4 font-serif text-[2.4rem] leading-[1.15] font-medium tracking-tight text-paper">
         OS, then Go.
       </h1>
-      <p className="notes mb-12 max-w-xl text-[1.05rem] text-mute">
-        Do not skip. If a sentence uses a word you have not earned, go back.
-        Notes on the left, the program on the right. The page scrolls as one.
-      </p>
       <ol className="m-0 list-none p-0">
         {lessons.map((lesson) => (
           <li key={lesson.slug} className="border-t border-rule">

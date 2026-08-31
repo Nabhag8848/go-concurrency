@@ -25,6 +25,6 @@ func main() {
 	time.Sleep(500 * time.Millisecond)
 	const want = 100000
 	lost := want - counter
-	fmt.Printf("\033[32mexpected %d\033[0m\n", want)
-	fmt.Printf("\033[31mgot %d  (lost %d)\033[0m\n", counter, lost)
+	fmt.Printf("expected %d\n", want)
+	fmt.Printf("got %d (lost %d)\n", counter, lost)
 }

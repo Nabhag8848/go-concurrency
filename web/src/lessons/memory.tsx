@@ -15,45 +15,35 @@ export const memoryLessons: Lesson[] = [
     slug: "03-shared-memory-races",
     order: 3,
     title: "Shared memory and races",
-    deck: "Two threads of execution, one whiteboard, no handshake.",
+    deck: "See how unsafe shared memory access creates data races.",
+    osConnection: "Two cores can interleave the load, add, and store in x++. They may also see different cached values until a synchronization primitive creates a happens-before edge.",
+    source: races,
     segments: [
       {
         note: (
           <P>
-            Two workers, one house, one integer. A race condition means the
-            result depends on who runs when. The scheduler may interleave
-            instructions you did not imagine.
+            Two goroutines update the same integer without coordination. The
+            result depends on their timing. That is a race condition.
           </P>
         ),
         code: sliceLines(races, 1, 11),
       },
       {
         note: (
-          <>
-            <P>
-              <C>counter++</C> looks like one step. On the CPU it is often load,
-              add, store. Both workers can load <C>0</C>, both add, both store{" "}
-              <C>1</C>. You lost an update. That is a data race when they
-              unsynchronized-share a variable.
-            </P>
-            <P>
-              Visibility is separate: a core can store into its own cache and
-              keep going. Another core may still load the old value. Compilers
-              and CPUs also reorder. A happens-before edge is the handshake that
-              makes a write visible — mutex unlock then lock, atomic store then
-              load, channel send then receive. Without that, the program is
-              undefined. <C>go run -race</C> is the scream.
-            </P>
-          </>
+          <P>
+            <C>counter++</C> is a load, add, and store—not one indivisible
+            operation. Both goroutines can read the same value and overwrite
+            each other’s result. Run <C>go run -race</C> to detect it.
+          </P>
         ),
         code: sliceLines(races, 12, 21),
       },
       {
         note: (
           <P>
-            Sleep is a guess so the race has time to happen before the print.
-            The number is often less than 100,000. The fix is not in this
-            program. First you must see the bug.
+            Sleep only gives the race time to happen before printing. The count
+            is often less than 100,000. First, see the bug; the next lessons fix
+            it.
           </P>
         ),
         code: sliceLines(races, 23, 30),
@@ -62,47 +52,37 @@ export const memoryLessons: Lesson[] = [
   },
   {
     slug: "00-defer-panic-recover",
-    order: 4,
+    order: 0,
     title: "Defer, panic, recover, exit",
-    deck: "Stack and process tools — not concurrency primitives. Later lessons still need them.",
+    deck: "Use defer, panic, recover, and exit to control cleanup and failure.",
+    osConnection: "Returning or panicking unwinds Go stacks, so defers can run. os.Exit hands control back to the OS immediately, without unwinding those stacks.",
+    source: deferPanic,
     segments: [
       {
         note: (
           <P>
-            <C>defer</C> registers a call for when the enclosing function
-            returns — cleanup, unlock, done. Body runs first. Deferred calls run
-            last-in, first-out. They still run if the function panics, which is
-            why recover lives in a defer.
+            <C>defer</C> schedules cleanup for when its function returns.
+            Deferred calls run last-in, first-out. They also run during a panic.
           </P>
         ),
         code: sliceLines(deferPanic, 1, 12),
       },
       {
         note: (
-          <>
-            <P>
-              Panic means something unexpected went wrong. It unwinds{" "}
-              <em>this</em> goroutine’s stack. If nobody recovers, the whole
-              process dies — every other goroutine gone.
-            </P>
-            <P>
-              <C>recover</C> only works inside a deferred function. Here the
-              rest of the function is skipped, recover returns the panic value,
-              and control returns to the caller. A server should not die because
-              one request panics: recover at the edge, drop the request, keep
-              serving.
-            </P>
-          </>
+          <P>
+            A panic unwinds the current goroutine’s stack. <C>recover</C> works
+            only inside a deferred function and returns the panic value. Without
+            recovery, the process exits.
+          </P>
         ),
         code: sliceLines(deferPanic, 14, 22),
       },
       {
         note: (
           <P>
-            <C>os.Exit</C> dies now. Defers do not run. Returning from{" "}
-            <C>main</C> does run defers, with status 0. The Exit calls stay
-            commented so you can see the last defer. Go does not use <C>main</C>
-            ’s return value as the exit status.
+            <C>os.Exit</C> ends the process immediately, so defers do not run.
+            Returning from <C>main</C> does run defers. The commented exit call
+            lets this example finish normally.
           </P>
         ),
         code: sliceLines(deferPanic, 24, 42),
@@ -111,24 +91,19 @@ export const memoryLessons: Lesson[] = [
   },
   {
     slug: "16-processes-signals-exit",
-    order: 5,
+    order: 16,
     title: "Signals, spawn, exec, exit",
-    deck: "Doors to other houses — not more people in this one.",
+    deck: "Start programs, handle signals, and understand process termination.",
+    osConnection: "A child process has its own PID and memory, while exec replaces the current process image. The kernel delivers signals to the process, not to individual goroutines.",
+    source: processes,
     segments: [
       {
         note: (
-          <>
-            <P>
-              Channels and mutexes live inside one process. Spawn is a new PID
-              and separate memory. Exec overlays this PID with another binary —
-              the Go runtime is gone. Signals interrupt the process, not each
-              goroutine. You listen on one goroutine, then cancel the rest.
-            </P>
-            <P>
-              <C>Output</C> starts a child, waits until it exits, and captures
-              stdout. That wait is a join for a PID.
-            </P>
-          </>
+          <P>
+            A child process has its own PID and memory. <C>Output</C> starts it,
+            waits for it to exit, and captures its standard output. That wait is
+            the process equivalent of a join.
+          </P>
         ),
         code: sliceLines(processes, 1, 20),
       },
@@ -144,18 +119,11 @@ export const memoryLessons: Lesson[] = [
       },
       {
         note: (
-          <>
-            <P>
-              <C>signal.Notify</C> turns a process signal into a channel send.
-              Buffer 1 so a signal before you select is not dropped. This demo
-              usually hits the timeout. After a real interrupt, cancel a context
-              — do not Exit in the middle of cleanup.
-            </P>
-            <P>
-              We do not call Exec or Exit here so the rest of the program can
-              finish.
-            </P>
-          </>
+          <P>
+            <C>signal.Notify</C> delivers process signals through a channel.
+            Buffer one signal so an early interrupt is not lost. On interrupt,
+            cancel ongoing work instead of exiting during cleanup.
+          </P>
         ),
         code: sliceLines(processes, 49, 78),
       },
@@ -163,45 +131,38 @@ export const memoryLessons: Lesson[] = [
   },
   {
     slug: "04-goroutines",
-    order: 6,
+    order: 4,
     title: "Goroutines",
-    deck: "A thread of execution implemented by the runtime, not the kernel.",
+    deck: "Run lightweight concurrent functions managed by the Go runtime.",
+    osConnection: "An OS thread is a costly, kernel-scheduled worker. The Go runtime schedules many lightweight goroutines onto a smaller set of those threads.",
+    source: goroutines,
     segments: [
       {
         note: (
           <P>
-            An OS thread is an expensive kernel-scheduled worker with a fat
-            stack. A goroutine starts around a couple of KiB and grows. You can
-            have hundreds of thousands of them. You cannot sanely have that many
-            OS threads.
+            An OS thread is a kernel-scheduled worker with a large fixed cost.
+            A goroutine starts with a small, growing stack. You can create far
+            more goroutines than OS threads.
           </P>
         ),
         code: sliceLines(goroutines, 1, 13),
       },
       {
         note: (
-          <>
-            <P>
-              <C>go f(x)</C> creates a new goroutine that will call <C>f(x)</C>.
-              The caller does not wait. When <C>main</C> returns, the process
-              exits even if others are still running.
-            </P>
-            <P>
-              Go schedules M:N — G is the work, M is an OS thread, P is a right
-              to execute Go code. When a goroutine waits on a channel, the
-              runtime parks it and runs another on the same OS thread. No kernel
-              context switch required.
-            </P>
-          </>
+          <P>
+            <C>go f(x)</C> starts <C>f(x)</C> in a new goroutine, and the caller
+            continues immediately. When <C>main</C> returns, the process exits.
+            Use synchronization when work must finish first.
+          </P>
         ),
         code: sliceLines(goroutines, 15, 27),
       },
       {
         note: (
           <P>
-            Prints interleave. Order is not guaranteed. That is the scheduler.
-            If you <C>go</C> something, you have concurrent access to whatever
-            that function touches. Either don’t share, or synchronize.
+            Prints can interleave, so their order is not guaranteed. A goroutine
+            has concurrent access to whatever it touches. Avoid sharing data or
+            synchronize access to it.
           </P>
         ),
         code: sliceLines(goroutines, 29, 32),
@@ -210,41 +171,29 @@ export const memoryLessons: Lesson[] = [
   },
   {
     slug: "05-waitgroups",
-    order: 7,
+    order: 5,
     title: "WaitGroups",
-    deck: "Join without guessing. Sleep is not a join.",
+    deck: "Wait for a group of goroutines to finish safely.",
+    osConnection: "The kernel can join OS threads because it knows about them. WaitGroup recreates that join in user space by parking a goroutine until the count reaches zero.",
+    source: waitgroups,
     segments: [
       {
         note: (
-          <>
-            <P>
-              The kernel can join OS threads. A goroutine is not a kernel
-              object. <C>WaitGroup</C> is the user-space join: a counter plus a
-              sleep queue. <C>Add</C> before launch, <C>Done</C> once per add,{" "}
-              <C>Wait</C> parks until the count is zero.
-            </P>
-            <P>
-              Prefer <C>defer Done()</C> so a return or panic still accounts for
-              the worker.
-            </P>
-          </>
+          <P>
+            A <C>WaitGroup</C> waits for a set of goroutines to finish. Call
+            <C>Add</C> before launch, then <C>Done</C> once for each worker.
+            <C>Wait</C> blocks until the count reaches zero.
+          </P>
         ),
         code: sliceLines(waitgroups, 1, 12),
       },
       {
         note: (
-          <>
-            <P>
-              Add before <C>go</C>, or Wait can see zero too early. Pass a
-              pointer; do not copy a WaitGroup after use. Wait parks the
-              goroutine, not necessarily the OS thread forever — the runtime can
-              run other work on that thread.
-            </P>
-            <P>
-              Joining is not protecting shared data. This only answers “are they
-              finished?”
-            </P>
-          </>
+          <P>
+            Add work before calling <C>go</C>, or <C>Wait</C> may return too
+            early. Pass a pointer and never copy a used WaitGroup. It joins work;
+            it does not protect shared data.
+          </P>
         ),
         code: sliceLines(waitgroups, 14, 25),
       },
@@ -252,18 +201,19 @@ export const memoryLessons: Lesson[] = [
   },
   {
     slug: "06-mutexes",
-    order: 8,
+    order: 6,
     title: "Mutexes",
-    deck: "Same loop as the race, plus a door on the whiteboard.",
+    deck: "Protect shared data by allowing one goroutine into a critical section at a time.",
+    osConnection: "A contended OS-thread lock would park the whole thread in a kernel wait queue. Go’s mutex can park only the waiting goroutine and let the OS thread run other work.",
+    source: mutexes,
     segments: [
       {
         note: (
           <>
             <P>
-              A mutex is mutual exclusion on a piece of memory. Uncontended lock
-              is a cheap CPU instruction. If someone already holds it, this
-              goroutine parks. The code between lock and unlock is the critical
-              section — keep it tiny.
+              A mutex gives one goroutine exclusive access to shared memory. A
+              waiting goroutine parks until the lock is free. Keep the critical
+              section between lock and unlock small.
             </P>
             <NoteTable
               headers={["Question", "Tool"]}
@@ -280,10 +230,9 @@ export const memoryLessons: Lesson[] = [
         note: (
           <>
             <P>
-              One goroutine at a time does the load/add/store. Unlock is also
-              the handshake: the next locker is guaranteed to see those writes.
-              The lock makes the whiteboard update visible, not the <C>++</C>{" "}
-              itself.
+              The mutex makes the load, add, and store happen one at a time.
+              Unlocking also makes those writes visible to the next locker. Use
+              the same mutex for every access to the same data.
             </P>
             <Ul>
               <Li>Same mutex for the same data.</Li>
@@ -299,18 +248,18 @@ export const memoryLessons: Lesson[] = [
   },
   {
     slug: "07-atomics",
-    order: 9,
+    order: 7,
     title: "Atomic counters",
-    deck: "A mutex serializes a region of code. An atomic is one word on the chip.",
+    deck: "Update individual shared values safely without a mutex.",
+    osConnection: "An atomic operation is a CPU instruction that safely changes one machine word across cores. It cannot make several fields update as one consistent unit.",
+    source: atomics,
     segments: [
       {
         note: (
           <P>
-            <C>Add</C> is safe from many goroutines without a lock. It is the
-            wrong tool when several fields must change together — two atomics
-            are two steps, and another goroutine can see a frankenstein value.
-            One integer or flag: atomic is fine. A struct that must stay
-            consistent: mutex, or one owner goroutine later.
+            <C>Add</C> safely updates one value from many goroutines without a
+            lock. It cannot make several fields change as one operation. Use a
+            mutex or one owner goroutine when data must stay consistent.
           </P>
         ),
         code: sliceLines(atomics, 1, 25),

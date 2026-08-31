@@ -11,5 +11,7 @@ export type Lesson = {
   order: number
   title: string
   deck: string
+  osConnection: string
+  source?: string
   segments: Segment[]
 }

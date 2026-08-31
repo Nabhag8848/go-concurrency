@@ -24,6 +24,13 @@ html {
   color-scheme: dark;
 }
 
+/* Keep phone text comfortably sized, while avoiding an oversized desktop reading scale. */
+@media (min-width: 640px) {
+  html {
+    font-size: 93.75%;
+  }
+}
+
 body {
   margin: 0;
   min-height: 100svh;
@@ -31,7 +38,7 @@ body {
   color: var(--color-ink);
   font-family: var(--font-note);
   font-optical-sizing: auto;
-  font-weight: 400;
+  font-weight: 350;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
 }
@@ -48,20 +55,264 @@ body {
 .notes {
   font-family: var(--font-note);
   font-optical-sizing: auto;
-  font-weight: 400;
-  font-size: 1.02rem;
-  line-height: 1.82;
+  font-weight: 350;
+  font-size: clamp(1rem, 0.96rem + 0.2vw, 1.1rem);
+  line-height: 1.78;
   color: var(--color-ink);
-  letter-spacing: 0.01em;
+  letter-spacing: 0.005em;
 }
 
 .notes strong {
-  font-weight: 500;
+  font-weight: 450;
   color: var(--color-paper);
 }
 
 .notes p {
-  font-weight: 400;
+  font-weight: 350;
+}
+
+.lesson-note {
+  padding-block: 0.75rem;
+}
+
+.visual-panel {
+  align-self: stretch;
+}
+
+.runtime-stage {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--color-dusk) 38%, var(--color-well-edge));
+  border-radius: 1rem;
+  background: #12110f;
+  box-shadow: 0 18px 50px color-mix(in srgb, #000 24%, transparent), inset 0 1px 0 color-mix(in srgb, var(--color-paper) 8%, transparent);
+}
+
+.runtime-stage::after {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  border: 1px solid color-mix(in srgb, var(--color-paper) 5%, transparent);
+  border-radius: inherit;
+  content: "";
+  pointer-events: none;
+}
+
+.runtime-stage-topline {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.72rem 0.9rem 0.48rem;
+  color: color-mix(in srgb, var(--color-paper) 76%, var(--color-dusk));
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+
+.runtime-status {
+  color: var(--color-pine);
+}
+
+.runtime-status::before {
+  display: inline-block;
+  width: 0.4rem;
+  height: 0.4rem;
+  margin-right: 0.36rem;
+  border-radius: 50%;
+  background: currentColor;
+  content: "";
+  box-shadow: 0 0 10px currentColor;
+}
+
+.runtime-canvas {
+  display: block;
+  width: 100%;
+  border-top: 1px solid color-mix(in srgb, var(--color-dusk) 14%, var(--color-well-edge));
+  aspect-ratio: 460 / 250;
+}
+
+.runtime-footer {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 0.8rem;
+  min-height: 3.9rem;
+  padding: 0.7rem 0.9rem 0.8rem;
+  border-top: 1px solid color-mix(in srgb, var(--color-dusk) 15%, var(--color-well-edge));
+  background: linear-gradient(90deg, color-mix(in srgb, var(--color-well) 88%, var(--color-dusk)), var(--color-well));
+  color: var(--color-mute);
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.runtime-footer strong,
+.runtime-footer small {
+  display: block;
+  font: inherit;
+}
+
+.runtime-footer strong {
+  margin-bottom: 0.24rem;
+  color: var(--color-ash);
+}
+
+.runtime-footer small {
+  color: color-mix(in srgb, var(--color-mute) 82%, var(--color-dusk));
+  font-size: 8px;
+}
+
+.runtime-controls {
+  display: flex;
+  flex: none;
+  gap: 0.35rem;
+}
+
+.runtime-controls button {
+  border: 1px solid color-mix(in srgb, var(--color-dusk) 35%, var(--color-well-edge));
+  border-radius: 0.32rem;
+  padding: 0.26rem 0.42rem;
+  background: color-mix(in srgb, var(--color-well) 74%, var(--color-dusk));
+  color: var(--color-paper);
+  font: inherit;
+  font-size: 8px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.runtime-controls button:hover {
+  border-color: var(--color-ember);
+  color: var(--color-ember);
+}
+
+.run-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.42rem;
+  border: 1px solid color-mix(in srgb, var(--color-pine) 60%, var(--color-well-edge));
+  background: color-mix(in srgb, var(--color-pine) 12%, var(--color-well));
+  color: var(--color-pine);
+  box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-pine) 26%, transparent);
+  animation: run-button-breathe 2.4s ease-in-out infinite;
+}
+
+.run-button:hover {
+  border-color: var(--color-pine);
+  background: color-mix(in srgb, var(--color-pine) 19%, var(--color-well));
+  color: var(--color-paper);
+  animation-play-state: paused;
+}
+
+.run-button:disabled {
+  cursor: wait;
+  opacity: 0.78;
+}
+
+.run-button-dot {
+  width: 0.42rem;
+  height: 0.42rem;
+  border-radius: 50%;
+  background: currentColor;
+  box-shadow: 0 0 0.55rem currentColor;
+  animation: run-button-dot 1.2s ease-in-out infinite;
+}
+
+.playground-output {
+  overflow: hidden;
+  margin-top: 0.25rem;
+  border: 1px solid color-mix(in srgb, var(--color-pine) 27%, var(--color-well-edge));
+  border-radius: 0.75rem;
+  background: #171816;
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--color-paper) 4%, transparent);
+}
+
+.playground-output-title {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.55rem 0.8rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--color-pine) 18%, var(--color-well-edge));
+  color: var(--color-mute);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.playground-prompt {
+  margin-right: 0.55rem;
+  color: var(--color-pine);
+  font-size: 1.15em;
+}
+
+.playground-output pre {
+  min-height: 4.3rem;
+  margin: 0;
+  padding: 0.85rem 0.9rem 1rem;
+  overflow: auto;
+  color: var(--color-ash);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.65;
+  white-space: pre-wrap;
+}
+
+.playground-output pre.playground-error {
+  color: color-mix(in srgb, var(--color-ember) 84%, var(--color-paper));
+}
+
+@keyframes run-button-breathe {
+  50% {
+    border-color: var(--color-pine);
+    box-shadow: 0 0 0 0.28rem color-mix(in srgb, var(--color-pine) 22%, transparent);
+  }
+}
+
+@keyframes run-button-dot {
+  50% {
+    opacity: 0.45;
+    transform: scale(0.68);
+  }
+}
+
+@media (max-width: 460px) {
+  .runtime-footer {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+
+.os-connection {
+  display: none;
+  max-width: 28rem;
+  color: var(--color-mute);
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
+
+.os-connection p {
+  margin: 0;
+}
+
+.os-connection-label {
+  margin-bottom: 0.2rem !important;
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  font-weight: 500 !important;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+@media (min-width: 1024px) {
+  .os-connection {
+    display: block;
+  }
+
+  .lesson-note {
+    padding-top: calc(var(--code-top-padding) + var(--code-intro-height));
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

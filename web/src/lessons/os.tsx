@@ -6,7 +6,7 @@ import { ProcessHouses } from "../visuals/ProcessHouses"
 import { SchedulerStates } from "../visuals/SchedulerStates"
 import { ThreadsInHouse } from "../visuals/ThreadsInHouse"
 import { UserSpaceMux } from "../visuals/UserSpaceMux"
-import { C, Li, NoteTable, P, Ul } from "./prose"
+import { Li, NoteTable, P, Ul } from "./prose"
 import type { Lesson } from "./types"
 
 export const osLessons: Lesson[] = [
@@ -14,37 +14,26 @@ export const osLessons: Lesson[] = [
     slug: "01-process-thread",
     order: 1,
     title: "CPU, process, thread",
-    deck: "No program on the right — pictures of the machine instead.",
+    deck: "Understand the roles of CPUs, processes, and threads.",
+    osConnection: "The operating system creates processes with private memory and schedules their threads on CPU cores. A thread’s registers and stack are the state the OS saves to pause and resume it.",
     segments: [
       {
         note: (
-          <>
-            <P>
-              A CPU core fetches an instruction, executes it, repeats. While it
-              works it keeps a tiny private bundle: program counter, registers
-              (scratch on the chip, not RAM), and a stack pointer. That bundle
-              is a <strong>thread of execution</strong> — OS jargon for a
-              sequence of instructions that can pause and resume.
-            </P>
-            <P>
-              Eight cores can truly execute eight threads at the same instant.
-              Everything else is rapid switching.
-            </P>
-          </>
+          <P>
+            A CPU core fetches and executes instructions. A thread of execution
+            carries the registers and stack needed to pause and resume that
+            work. More threads than cores means rapid switching.
+          </P>
         ),
         visual: <CoreFetch />,
       },
       {
         note: (
-          <>
-            <P>
-              Run a binary and the OS creates a <strong>process</strong>: an
-              address space, at least one thread, files, PID, permissions. A
-              process is a house. Other houses cannot walk into your rooms
-              unless you open a door (pipe, socket, file). That isolation is
-              why a crash in one program does not usually wipe another.
-            </P>
-          </>
+          <P>
+            Running a binary creates a process with its own memory, files, and
+            permissions. Processes are isolated from each other by default. A
+            crash in one process usually does not affect another.
+          </P>
         ),
         visual: <ProcessHouses />,
       },
@@ -52,10 +41,9 @@ export const osLessons: Lesson[] = [
         note: (
           <>
             <P>
-              A <strong>thread</strong> is a worker inside that house: own
-              program counter, registers, and stack. Heap, globals, and files
-              are shared with sibling threads. Two threads can both touch{" "}
-              <C>counter++</C>. Two processes generally cannot.
+              A thread has its own registers and stack. Threads in one process
+              share its heap, globals, and files. That shared memory needs
+              coordination.
             </P>
             <NoteTable
               headers={["Thing", "Shared in one process?"]}
@@ -70,20 +58,11 @@ export const osLessons: Lesson[] = [
       },
       {
         note: (
-          <>
-            <P>
-              <strong>Parallel</strong> means two things executing at the same
-              moment on different cores. <strong>Concurrent</strong> means work
-              overlaps in time — often one core, many threads taking turns. You
-              can have concurrency without parallelism.
-            </P>
-            <P>
-              Your Go program is one process.{" "}
-              <C>GOMAXPROCS</C> caps how many goroutines may run Go code at the
-              same time. It does not cap how many you create.               Extra work waits
-              its turn.
-            </P>
-          </>
+          <P>
+            Parallel work runs at the same instant on different cores.
+            Concurrent work overlaps in time, often by taking turns. You can
+            have concurrency without parallelism.
+          </P>
         ),
         visual: <ConcurrentVsParallel />,
       },
@@ -91,13 +70,9 @@ export const osLessons: Lesson[] = [
         note: (
           <>
             <P>
-              When a thread waits on a socket, spinning wastes the core.{" "}
-              <strong>Blocking</strong> tells the kernel to deschedule it:
-              asleep, core free, woken when data arrives. Blocking is cheap for
-              the CPU. An OS thread is still expensive as an object (~1 MiB
-              stack, kernel bookkeeping). You cannot sanely have 100,000 of
-              them. That is the entire motivation for goroutines: many concurrent
-              tasks, few OS threads.
+              Blocking lets the kernel free a core while a thread waits for I/O.
+              An OS thread is still expensive to create and manage. Goroutines
+              allow many waiting tasks to share fewer OS threads.
             </P>
             <NoteTable
               headers={["OS", "Go"]}
@@ -118,32 +93,26 @@ export const osLessons: Lesson[] = [
     slug: "02-scheduling",
     order: 2,
     title: "Scheduling and context switching",
-    deck: "Why “one OS thread per task” dies, and what user-space scheduling buys you.",
+    deck: "Learn how operating systems schedule work and switch between tasks.",
+    osConnection: "The kernel chooses which runnable thread gets a core and can preempt it after a time slice. That switch saves CPU state and costs cache locality.",
     segments: [
       {
         note: (
-          <>
-            <P>
-              There are more threads than cores. The kernel scheduler picks who
-              gets a core. A thread is running, runnable, or blocked. Only
-              running uses a core. Everyone else is parked.
-            </P>
-          </>
+          <P>
+            There are usually more threads than CPU cores. The kernel scheduler
+            chooses which runnable thread gets a core. Blocked threads wait
+            without using one.
+          </P>
         ),
         visual: <SchedulerStates />,
       },
       {
         note: (
-          <>
-            <P>
-              A <strong>context switch</strong> saves A’s registers and program
-              counter, loads B’s, starts B. It is not free: extra save/restore,
-              a trip through the kernel, and a cold cache and TLB. OS threads
-              are scheduled preemptively. After a time slice the kernel can
-              interrupt you mid-loop. It also switches when you block.               You do
-              not pick the moment.
-            </P>
-          </>
+          <P>
+            A context switch saves one thread’s CPU state and restores another’s.
+            It costs time and can disturb CPU caches. The kernel may switch
+            threads after a time slice or when one blocks.
+          </P>
         ),
         visual: <ContextSwitch />,
       },
@@ -151,18 +120,9 @@ export const osLessons: Lesson[] = [
         note: (
           <>
             <P>
-              100,000 OS threads means 100,000 fat stacks and a scheduler that
-              thrashes. Servers want that many connections anyway. Historical
-              answer: event loops. Go’s answer: many user-space goroutines, few
-              OS threads.
-            </P>
-            <P>
-              The kernel scheduler sees OS threads and does not know about
-              goroutines. The Go scheduler parks a goroutine waiting on a
-              channel and runs another on the <em>same</em> OS thread — often
-              without a kernel context switch. A blocking syscall can pin an M
-              in the kernel; the runtime may hand the P to another M so other
-              work keeps going.
+              Servers can have many more connections than practical OS threads.
+              Go represents that work as lightweight goroutines. The runtime can
+              park one goroutine and run another on the same OS thread.
             </P>
             <Ul>
               <Li>A core is scarce.</Li>

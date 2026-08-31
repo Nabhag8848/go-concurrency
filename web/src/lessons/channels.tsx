@@ -14,34 +14,27 @@ import type { Lesson } from "./types";
 export const channelLessons: Lesson[] = [
   {
     slug: "08-channels",
-    order: 10,
+    order: 8,
     title: "Channels",
-    deck: "Do not share the whiteboard. Pass a note.",
+    deck: "Coordinate goroutines by sending values through channels.",
+    osConnection: "A Unix pipe moves bytes between processes without sharing memory. A Go channel uses the same handoff idea inside one process and provides the required memory-ordering handshake.",
+    source: channels,
     segments: [
       {
         note: (
-          <>
-            <P>
-              A Unix pipe moves bytes between processes without walking into the
-              other address space. A channel is that pipe inside one process,
-              with a type. Send and receive are a handshake: the receiver sees
-              everything the sender did before the send.
-            </P>
-            <P>
-              Unbuffered means no mailbox. Send waits until a receive is
-              happening. Directions on the parameters are a seatbelt: ping may
-              only send.
-            </P>
-          </>
+          <P>
+            A channel sends typed values between goroutines. A send and receive
+            form a synchronization point, so the receiver sees earlier writes.
+            An unbuffered send waits for its receiver.
+          </P>
         ),
         code: sliceLines(channels, 1, 22),
       },
       {
         note: (
           <P>
-            Buffered is a bounded queue. Send parks only when the mailbox is
-            full. Uncomment the third send and this goroutine waits for itself —
-            deadlock. The bound is backpressure.
+            A buffered channel is a bounded queue. Send blocks only when it is
+            full. Its capacity provides backpressure.
           </P>
         ),
         code: sliceLines(channels, 24, 32),
@@ -49,9 +42,8 @@ export const channelLessons: Lesson[] = [
       {
         note: (
           <P>
-            Close means no more sends. Range drains remaining values, then
-            stops. Only the sender closes. Close twice or send on a closed
-            channel panics.
+            Closing says no more values will be sent. Range receives remaining
+            values, then stops. Only the sender should close a channel.
           </P>
         ),
         code: sliceLines(channels, 34, 46),
@@ -60,24 +52,19 @@ export const channelLessons: Lesson[] = [
   },
   {
     slug: "09-select-timeouts",
-    order: 11,
+    order: 9,
     title: "Select and timeouts",
-    deck: "Wait on several things at once, the way poll waits on file descriptors.",
+    deck: "Wait on multiple channel operations and limit how long they can block.",
+    osConnection: "Unix select and poll wait for one of several file descriptors or a timeout. Go’s select has the same shape for channels and parks the goroutine instead of spinning.",
+    source: selectTimeouts,
     segments: [
       {
         note: (
-          <>
-            <P>
-              Each case is one channel op. The goroutine parks until one case
-              can run. Several ready: Go picks one at random. None ready: park,
-              unless you add <C>default</C>.
-            </P>
-            <P>
-              A timeout is wait <em>up to</em> a duration. The timer wins here.
-              Select did not kill the worker. Buffer 1 lets that send complete
-              after we moved on.
-            </P>
-          </>
+          <P>
+            Each <C>select</C> case is a channel operation. It waits until one
+            case is ready; if several are ready, Go chooses one. A timer case
+            limits the wait, but does not stop the worker.
+          </P>
         ),
         code: sliceLines(selectTimeouts, 1, 21),
       },
@@ -112,17 +99,18 @@ export const channelLessons: Lesson[] = [
   },
   {
     slug: "10-worker-pools",
-    order: 12,
+    order: 10,
     title: "Worker pools",
-    deck: "At most N pieces of work at once, plus a channel as the queue.",
+    deck: "Process jobs with a fixed number of concurrent workers.",
+    osConnection: "OS threads, CPU time, sockets, and file descriptors are finite resources. A pool bounds concurrent work before it overwhelms one of them.",
+    source: workerPools,
     segments: [
       {
         note: (
           <P>
-            Goroutines are cheap, but unbounded fan-out still melts sockets and
-            databases. A pool caps how many jobs run at once. Workers range
-            until the job channel is closed and empty. Directions keep them from
-            sending jobs or receiving results the wrong way.
+            Goroutines are cheap, but unbounded work can exhaust downstream
+            resources. A worker pool caps concurrent jobs. Workers receive jobs
+            until the jobs channel is closed and empty.
           </P>
         ),
         code: sliceLines(workerPools, 1, 18),
@@ -130,11 +118,9 @@ export const channelLessons: Lesson[] = [
       {
         note: (
           <P>
-            Three workers, five jobs. Buffer to the job count so the producer
-            can enqueue without waiting. Close jobs means no more work. Wait
-            then close results in another goroutine so ranging outputs cannot
-            deadlock if the result channel were unbuffered. At most three sleeps
-            overlap. That is the point.
+            Three workers process five jobs, so only three jobs run at once.
+            Closing jobs tells workers that no more work is coming. Wait for
+            workers before closing results for the receiver.
           </P>
         ),
         code: sliceLines(workerPools, 20, 45),
@@ -143,16 +129,17 @@ export const channelLessons: Lesson[] = [
   },
   {
     slug: "14-rate-limiting",
-    order: 13,
+    order: 14,
     title: "Rate limiting",
-    deck: "A pool caps how many run at once. A limiter caps how often work starts.",
+    deck: "Control how frequently work is allowed to start.",
+    osConnection: "The kernel will not stop one process from starting requests too quickly. A runtime timer turns the system clock into a gate that parks work until the next token arrives.",
+    source: rateLimiting,
     segments: [
       {
         note: (
           <P>
-            Tokens appear on a clock. Receiving from the ticker is the gate. Use{" "}
-            <C>NewTicker</C> so you can Stop. Prints should sit about 200ms
-            apart. The bound is time, not a worker count.
+            A ticker releases one token per interval. Receiving that token is
+            the gate for each request. Stop a ticker when it is no longer used.
           </P>
         ),
         code: sliceLines(rateLimiting, 1, 22),
@@ -160,8 +147,8 @@ export const channelLessons: Lesson[] = [
       {
         note: (
           <P>
-            A burst is extra tokens already in a mailbox. Spend three at once,
-            then wait for refill. You should see a clump, then two slower lines.
+            A burst keeps several tokens ready in a buffered channel. Requests
+            can spend those tokens immediately. Later requests wait for refill.
           </P>
         ),
         code: sliceLines(rateLimiting, 24, 46),
@@ -170,17 +157,18 @@ export const channelLessons: Lesson[] = [
   },
   {
     slug: "15-stateful-goroutines",
-    order: 14,
+    order: 15,
     title: "Stateful goroutines",
-    deck: "Only one goroutine is allowed to touch the map. Everyone else messages it.",
+    deck: "Keep mutable state in one goroutine and access it through messages.",
+    osConnection: "Shared state across cores needs locks or atomics to stay correct. One owner goroutine avoids that coordination by making every other goroutine send a request instead.",
+    source: stateful,
     segments: [
       {
         note: (
           <P>
-            Each request carries a private reply channel. When the client
-            receive completes, the owner has already done the map op. No mutex
-            on the map. The mutex is implied by “this G is the only one that
-            indexes state.”
+            Each request carries a private reply channel. One goroutine owns
+            the map and performs every operation. Clients wait for its reply, so
+            no mutex is needed for the map.
           </P>
         ),
         code: sliceLines(stateful, 1, 18),
@@ -188,9 +176,9 @@ export const channelLessons: Lesson[] = [
       {
         note: (
           <P>
-            The owner selects among reads, writes, or cancel. Unbuffered ops
-            mean the client parks until the owner takes the request.{" "}
-            <C>go run -race</C> is quiet with no lock.
+            The owner selects among read requests, write requests, and
+            cancellation. Unbuffered operations make clients wait until it takes
+            their request. This design has no shared map access to race on.
           </P>
         ),
         code: sliceLines(stateful, 20, 44),
@@ -198,9 +186,9 @@ export const channelLessons: Lesson[] = [
       {
         note: (
           <P>
-            Clients finish, then one read, then stop. Cancel is cooperative: the
-            owner must return so its defers run. Join the owner; do not Sleep
-            and hope.
+            Clients finish their work, then request one final read and stop the
+            owner. Cancellation is cooperative, so the owner must return. Join
+            it instead of sleeping and hoping.
           </P>
         ),
         code: sliceLines(stateful, 46, 65),
@@ -209,32 +197,29 @@ export const channelLessons: Lesson[] = [
   },
   {
     slug: "11-context",
-    order: 15,
+    order: 11,
     title: "Context",
-    deck: "There is no kill button. Workers check a shared “please stop” and return.",
+    deck: "Pass cancellation signals, deadlines, and request-scoped values through concurrent work.",
+    osConnection: "Unix can force-kill a process, but Go cannot safely kill one goroutine while it may hold a lock or write data. Context makes cancellation cooperative: the goroutine observes Done and returns.",
+    source: contextLesson,
     segments: [
       {
         note: (
           <P>
-            <C>Done()</C> is a channel. Cancel or a deadline closes it. If a
-            parent cancels, children cancel. Always call the cancel you are
-            given — defer it so the timer is freed on early return.
+            <C>Done()</C> is closed when a context is canceled or reaches its
+            deadline. Parent cancellation reaches child contexts. Always call
+            the cancel function to release its timer.
           </P>
         ),
         code: sliceLines(contextLesson, 1, 25),
       },
       {
         note: (
-          <>
-            <P>
-              Timeout: the loop must return for defers to run. Cancel does not
-              unwind this function from the outside.
-            </P>
-            <P>
-              Parent cancel: start the child, then stop. Wait is the join. If
-              the child ignored Done, Wait would hang — a leak you can see.
-            </P>
-          </>
+          <P>
+            Cancellation does not stop a function from the outside; its loop
+            must observe <C>Done()</C> and return. <C>Wait</C> verifies that the
+            child did so instead of leaking.
+          </P>
         ),
         code: sliceLines(contextLesson, 27, 44),
       },
@@ -242,17 +227,18 @@ export const channelLessons: Lesson[] = [
   },
   {
     slug: "12-deadlocks-leaks",
-    order: 16,
+    order: 12,
     title: "Deadlocks and leaks",
-    deck: "Parked, and the wakeup never comes.",
+    deck: "Recognize blocked programs and goroutines that never finish.",
+    osConnection: "The kernel and Go runtime can park waiters, but neither can break a cycle where every wakeup depends on another blocked waiter. A leak is one parked goroutine that the rest of the program leaves behind.",
+    source: deadlocks,
     segments: [
       {
         note: (
           <P>
-            Unbuffered send finishes only when another goroutine is already
-            receiving. The receive is the next line in the same goroutine, so it
-            never starts. The runtime detector screams if every goroutine is
-            asleep. Leave this commented so the rest can run.
+            An unbuffered send needs a receiver at the same time. Here the
+            receiver is the next line, so it never starts. The runtime reports a
+            deadlock when every goroutine is blocked.
           </P>
         ),
         code: sliceLines(deadlocks, 1, 16),
@@ -260,10 +246,9 @@ export const channelLessons: Lesson[] = [
       {
         note: (
           <P>
-            A leak is sneakier: the program continues, one goroutine stays
-            parked forever. Buffer 1 and a default on send mean the worker
-            refuses to block after the timeout. Wait still joins. If the send
-            leaked, Wait would hang.
+            A goroutine leak leaves work blocked while the program continues.
+            A buffered result and nonblocking send let this worker finish after
+            timeout. <C>Wait</C> confirms that it did.
           </P>
         ),
         code: sliceLines(deadlocks, 18, 50),
@@ -272,24 +257,19 @@ export const channelLessons: Lesson[] = [
   },
   {
     slug: "13-gmp-runtime",
-    order: 17,
+    order: 13,
     title: "The Go runtime",
-    deck: "How this is even possible — G, M, P, and a peek at parked work.",
+    deck: "See how the Go runtime schedules goroutines onto operating-system threads.",
+    osConnection: "The kernel schedules OS threads and has no knowledge of goroutines. Go’s scheduler chooses which goroutine runs on each thread and moves on when one parks.",
+    source: gmp,
     segments: [
       {
         note: (
-          <>
-            <P>
-              To run Go code you need G + M + P. Park a G and the M can run a
-              different G with the same P. A blocking syscall can stick the M in
-              the kernel; the runtime may hand the P to another M. The netpoller
-              parks network waiters off the M entirely.
-            </P>
-            <P>
-              First prints: how many Ps may run Go code at once, how many cores,
-              how many Gs right now.
-            </P>
-          </>
+          <P>
+            Running Go code requires a goroutine (G), OS thread (M), and
+            processor token (P). When a goroutine parks, the thread can run
+            another one with the same P.
+          </P>
         ),
         code: sliceLines(gmp, 1, 13),
       },
@@ -297,10 +277,9 @@ export const channelLessons: Lesson[] = [
         note: (
           <>
             <P>
-              Eight sleepers are eight parked Gs, not eight OS threads. Peek at
-              the count while they still exist, then Wait. <C>GOMAXPROCS</C>{" "}
-              caps Go code in parallel. It does not cap Gs you create, or Ms
-              stuck in syscalls.
+              Eight sleeping goroutines do not require eight OS threads.
+              <C>GOMAXPROCS</C> caps how much Go code runs in parallel. It does
+              not limit the number of goroutines you create.
             </P>
             <NoteTable
               headers={["You write", "Runtime does"]}
