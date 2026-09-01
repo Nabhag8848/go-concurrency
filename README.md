@@ -50,3 +50,7 @@ The project configuration in `web/vercel.json` handles the build, SPA lesson rou
 ## Social sharing preview
 
 The image above is also used when the site is shared on social platforms. Its metadata lives in `web/index.html`, and the image asset is `web/public/social-preview.png`.
+
+## License
+
+Copyright © 2026 Nabhag Motivaras. All rights reserved. This repository is proprietary; no permission is granted to use, copy, modify, distribute, or create derivative works from its contents. See [LICENSE](LICENSE).
