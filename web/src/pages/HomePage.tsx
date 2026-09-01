@@ -55,16 +55,16 @@ export function HomePage() {
           </h1>
           <div className="home-intro notes max-w-2xl text-[1.02rem] text-mute">
             <p>
-              <strong>See the work move before you write the code.</strong> Begin
-              with CPUs, processes, threads, scheduling, and blocking—the pieces
-              that decide what concurrent code can actually do.
+              <strong>Before you write a goroutine, watch how work moves through a machine.</strong>{" "}
+              CPUs run instructions. The operating system gives processes and threads
+              time to run. Scheduling decides what runs next, and blocking explains
+              why work sometimes has to wait.
             </p>
             <p>
-              <strong>Take the course in order.</strong> The opening visual lessons
-              build operating-system intuition. Every later Go lesson then connects
-              goroutines, channels, locks, and the runtime back to that model—so
-              concurrency feels like a system you can reason about, not syntax to
-              memorize.
+              <strong>Take the lessons in order.</strong> The first few give you the
+              mental model underneath Go. Then goroutines, channels, locks, and the
+              runtime have something to attach to. By the end, concurrency should feel
+              less like a bag of tricks and more like a system you can see working.
             </p>
           </div>
         </section>
