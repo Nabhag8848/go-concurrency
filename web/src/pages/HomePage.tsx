@@ -48,7 +48,7 @@ export function HomePage() {
       <div className="home-course-grid">
         <section className="home-course-intro">
           <p className="mb-3 font-mono text-[10px] tracking-[0.14em] text-ember uppercase">
-            A visual course in Go concurrency · 17 lessons
+            An interactive guide to Go concurrency · 17 lessons
           </p>
           <h1 className="mb-5 max-w-2xl font-serif text-[clamp(2.65rem,2.05rem+2.1vw,4rem)] leading-[1.04] font-medium tracking-tight text-paper">
             Learn Go concurrency <span className="text-ash italic">from first principles.</span>

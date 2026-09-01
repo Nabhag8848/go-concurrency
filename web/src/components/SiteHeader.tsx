@@ -5,7 +5,7 @@ type SiteHeaderProps = {
 };
 
 export function SiteHeader({
-  kicker = "Concurrency from first principles",
+  kicker = "Go concurrency from first principles",
 }: SiteHeaderProps) {
   return (
     <header className="mb-10">
